@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Ingredient">
+  <resultMap id="KISIngtResult"  type="Ingredient">
+    <result property="ingredientNo" column="ingredientNo"/>
+    <result property="name" column="name"/>
+    <result property="grade" column="grade"/>
+    <result property="danger20" column="danger20"/>
+    <result property="dangerAllergy" column="dangerAllergy"/>
+    <result property="functional" column="functional"/>
+    
+    <result property="keyword" column="keyword"/>
+  </resultMap>
+  <!--  	키워드 없을 때 -->
+   <select id="KISIngtList" parameterType="Ingredient" resultMap="KISIngtResult">
+      select * from (select rownum rn, a.* from (select * from ingredient
+    	 order by ingredientNo) a) where rn between #{start} and #{end}   	
+   </select>
+   
+   <select id="KISIngtTotal" resultType="int">
+  	select count(*) from ingredient
+  </select>
+  <!--  	키워드 있을 때 -->
+   <select id="KISIngtListForSearch" parameterType="Ingredient" resultMap="KISIngtResult">
+      select * from (select rownum rn, a.* from (select * from ingredient
+    	 where name like '%' || #{keyword} || '%') a) where rn between #{start} and #{end}   	
+   </select>  
+   
+   <select id="KISIngtSearchTotal" parameterType="Ingredient" resultType="int">
+   	<if test="keyword != null">
+   		select count(*) from ingredient where name like '%' || #{keyword} || '%'
+   	</if>
+   </select> 
+  
+  <insert id="KISIngtWrite" parameterType="Ingredient">
+<!--   	<selectKey resultType="int" keyProperty="ingredientNo" order="BEFORE" statementType="PREPARED"> -->
+<!--   		select fn_MaxNoForTable('Ingredient') from dual -->
+<!--   	</selectKey> -->
+  	insert into ingredient values (fn_MaxNoForTable('Ingredient'), #{name}, #{grade}, #{danger20}, #{dangerAllergy}, #{specialyType}, #{functional})
+  </insert>
+  
+  <select id="KISIngtContent" parameterType="int" resultType="Ingredient">
+  	select * from ingredient where ingredientNo = #{ingredientNo}
+  </select>
+  
+  <delete id="KISIngtDelete" parameterType="int">
+  	delete from ingredient where ingredientNo = #{ingredientNo}
+  </delete>
+  
+  <update id="KISIngtUpdate" parameterType="Ingredient">
+  	update ingredient set ingredientNo=#{ingredientNo}, name=#{name}, grade=#{grade}, 
+  	danger20=#{danger20}, dangerAllergy=#{dangerAllergy}, specialyType=#{specialyType}, functional=#{functional}
+  	where ingredientNo=#{ingredientNo} 
+  </update>
+
+</mapper>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Cart">
+  
+  <resultMap id="CartResult"  type="Cart">
+    <result property="memberId" column="memberId"/>
+    <result property="mainNo" column="mainNo"/>
+    <result property="subNo" column="subNo"/>
+    <result property="title" column="title"/>
+    <result property="regDate" column="regDate"/>
+	<result property="ref_Table" column="ref_Table"/>
+	<result property="price" column="price"/>
+	<result property="filePath" column="filePath"/>
+	<result property="money" column="money"/>
+  </resultMap>
+
+	<!-- 1. 장바구니 추가	 -->		
+	<insert id="insertCart" parameterType="Cart">
+		INSERT INTO CLIP (memberId, mainNo, subNo, title, regDate, ref_Table) VALUES (#{memberId}, #{mainNo}, #{subNo}, #{title},fn_DateToChar(sysdate), 'CART')
+	</insert>
+	<!-- 2. 장바구니 목록	 -->
+  	<select id="listCart" parameterType="String" resultType="Cart">
+  		SELECT memberId, mainNo, title, subNo, price, filepath 
+  		FROM clip, (select	mainno itemno, min(price) price, min(filepath) filepath
+                    from	savefiles, iteminfo
+                    where	mainno = itemno
+                    and		ref_table = 'ITEMINFO'
+                    and		subno = 0
+                    group   by mainno
+                    order	by 1)
+  		WHERE memberId = #{memberId}
+  		AND mainNo = itemno 
+  		AND ref_Table = 'CART'
+	</select>
+	<!-- 3. 장바구니 삭제-->
+	<delete id="deleteCart" parameterType="Cart">
+		DELETE FROM clip WHERE mainNo = #{mainNo} AND memberId = #{memberId} AND ref_Table = 'CART'
+	</delete>
+	<!-- 4. 장바구니 수정-->
+	<!-- 장바구니 수량 update (덮어쓰기) -->
+	<update id="modifyCart">
+		UPDATE clip SET subNo = #{subNo} WHERE memberId = #{memberId} AND mainNo = #{mainNo} AND ref_Table = 'CART' 
+	</update>
+	<!-- 5. 장바구니 전체금액-->
+	<!-- 장바구니에 담긴 상품과 수량 전체를 합산한 결과를 select, 장바구니가 비어있으면 0 -->
+	<select id="sumMoney"  parameterType="map" resultType="int">
+		 select NVL(sum(subno*price),0) money
+		 from   clip, iteminfo
+		 where  clip.mainno = iteminfo.itemno
+		 and    ref_table='CART'
+		 and    clip.memberid=#{memberId}
+		 group  by clip.memberid
+	
+		<!-- SELECT NVL(SUM(i.price * c.subNo), 0) money 
+		FROM clip c, itemInfo i 
+		WHERE c.memberId = #{memberId}
+		and  c.MAINNO = i.ITEMNO
+		and  c.memberId = i.memberId
+		AND ref_Table = 'CART' --> 
+	</select>
+	<!-- 6. 장바구니 전체금액-->
+	<!-- 장바구니에 동일한 상품 레코드가 있으면 select count -->
+	<select id="countCart" parameterType="map" resultType="int">
+		SELECT COUNT(*) FROM clip WHERE memberId = #{memberId} AND mainNo = #{mainNo} AND ref_Table = 'CART' 
+	</select>
+	<!-- 7. 장바구니에 동일한 상품이 존재하면 수정-->
+	<!-- 장바구니 동일한 상품 레코드가 있으면 기존의 수량과 입력받은 수량을 합산하여 update -->
+	<update id="updateCart">
+		UPDATE clip SET subNo = subNo + #{subNo} WHERE memberId = #{memberId} AND mainNo = #{mainNo} AND ref_Table = 'CART' 
+	</update>
+	
+
+	
+</mapper>

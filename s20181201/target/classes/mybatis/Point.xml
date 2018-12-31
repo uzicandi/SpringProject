@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Point">
+	<!-- Use type aliases to avoid typing the full classname every time -->
+	<resultMap id="PointResult"  type="Point">
+	    <result property="memberId" column="memberId"/>
+	    <result property="inIncome" column="inIncome"/>
+	    <result property="price" column="price"/>
+	    <result property="regDate" column="regDate"/>
+	    <result property="point" column="point"/>
+	</resultMap>
+  	
+  	<!-- 원규 -->
+  	<insert id="setFirstPoint" parameterType="Member">
+		insert into point values(#{memberId}, 0, 0, fn_datetochar(sysdate), 0)
+	</insert>
+	
+	<select id="WGselPoint" parameterType="String" resultType="int">
+		select * from (select point from point where memberid=#{memberId} order by regdate desc) where rownum=1
+	</select>
+	
+	<select id="WGpointTotal" parameterType="String" resultType="int">
+  		select count(*) from point where memberid=#{memberId}
+	</select>
+	
+	<select id="WGpointList" parameterType="Point" resultType="Point">
+    	select memberId, isIncome, price, fn_date(regDate) regDate, point from (select rownum rn, a.* from (select * from point where memberid=#{memberId} order by regdate desc) a) where rn between #{start} and #{end}	
+    </select>
+    
+    <insert id="pointCharge" parameterType="Point">
+    	insert into point values(#{memberId}, 0, #{price}, fn_datetochar(sysdate), (select * from (select point from point where memberid=#{memberId} order by regdate desc) where rownum=1)+#{price})
+    </insert>
+    
+    <!-- 동범 -->
+    <insert id="subtractionPoint" parameterType="Point">
+    	insert into point values(#{memberId}, 1, #{price}, fn_datetochar(sysdate), (select * from (select point from point where memberid=#{memberId} order by regdate desc) where rownum=1)-#{price})
+    </insert>
+   
+   
+  
+	
+	
+  	<!-- insert랑 update는 resultType 또는 resultMap이 없다 -->
+  	<!-- isIncome이 0이면 충전, 1이면 사용 -->
+  
+	<!-- <select id="WGpointHistory" resultType="WGPoint">
+		<![CDATA[
+			select * from (select rownum rn, a.* from (select * from point where memberid='qwe123' order by regdate desc) a) where rn>0 and rownum <= 20;
+			select * from (select rownum rn, a.* from (select * from point where memberid='qwe123' order by regdate desc) a) where rn>0 and rownum <= 20;
+			
+		]]>
+	</select> -->
+
+
+</mapper>

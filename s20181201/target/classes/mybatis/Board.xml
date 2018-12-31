@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Board">
+	<resultMap id="BoardResult" type="Board">
+		<result property="boardNo" column="boardNo" />
+		<result property="boardCategory" column="boardCategory" />
+		<result property="title" column="title" />
+		<result property="content" column="content" />
+		<result property="viewGrade" column="viewGrade" />
+		<result property="isPublic" column="isPublic" />
+		<result property="hits" column="hits" />
+		<result property="memberId" column="memberId" />
+		<result property="regDate" column="regDate" />
+	</resultMap>
+
+	<select id="BoardList" parameterType="Board" resultMap="BoardResult">
+		select boardNo, boardCategory, title, content, viewgrade, ispublic,
+		hits, memberid, fn_date(regdate) as regdate from (select rownum rn,
+		a.*
+		from (select * from board
+		where (BOARDCATEGORY = '자유'
+		or BOARDCATEGORY = '정보'
+		or BOARDCATEGORY = 'QnA')
+
+		<choose>
+			<when test="keyword == 'title'">
+				and title like '%'||#{search}||'%'
+			</when>
+			<when test="keyword == 'content'">
+				and content like '%'||#{search}||'%'
+			</when>
+			<when test="keyword == 'memberId'">
+				and memberId like '%'||#{search}||'%'
+			</when>
+		</choose>
+
+		order by boardNo desc) a) where rn between #{start} and #{end}
+	</select>
+
+	<select id="BoardTotal" parameterType="Board" resultType="int">
+		select count(*) from board
+		<choose>
+			<when test="keyword == 'title'">
+				where title like '%'||#{search}||'%'
+			</when>
+			<when test="keyword == 'content'">
+				where content like '%'||#{search}||'%'
+			</when>
+			<when test="keyword == 'memberId'">
+				where memberId like '%'||#{search}||'%'
+			</when>
+		</choose>
+	</select>
+
+	<select id="BoardContent" parameterType="int" resultType="Board">
+		select
+		boardNo, boardCategory, title, content, viewgrade, ispublic,
+		hits,
+		memberid, fn_date(regdate) as regdate from board where boardNo =
+		#{boardNo}
+	</select>
+
+	<delete id="BoardDelete" parameterType="int">
+		delete from board where
+		boardNo = #{boardNo}
+	</delete>
+
+	<insert id="BoardWrite">
+		insert into board values(fn_maxnofortable,
+		#{boardCategory}, #{title},
+		#{content}, '1', '1', 0, #{memberId},
+		to_char(sysdate, 'YYYYMMDDHHMISS'), 0)
+	</insert>
+
+	<update id="BoardHitPlus" parameterType="int">
+		update board set hits =
+		hits+1 where boardNo = #{boardNo}
+	</update>
+
+	<update id="BoardUpdate" parameterType="Board">
+		update board set
+		boardCategory = #{boardCategory}, title = #{title}, content
+		=
+		#{content} where boardNo = #{boardNo}
+	</update>
+
+	<insert id="BoardSaveFilesWrite" parameterType="Board">
+		insert into
+		savefiles values(0, 0, 'BOARD', fn_maxnofortable('savefiles',
+		'board',
+		0, 0), 'aa', #{savedFileName}, '', #{filePath}, 1,
+		to_char(sysdate,
+		'YYYYMMDDHHMISS'))
+	</insert>
+
+	<delete id="BoardSaveFilesTempDelete" parameterType="int">
+		delete from
+		savefiles where mainno = 0 and ref_table = 'BOARD'
+	</delete>
+
+	<update id="BoardSaveFilesUpdate" parameterType="String">
+		update savefiles
+		set mainno = (select max(boardno) from board), ref_table =
+		#{boardCategory} where mainno = 0
+	</update>
+
+	<select id="BoardCategoryTotal" parameterType="String"
+		resultType="int">
+		select count(*) from board where boardCategory =
+		#{boardCategory}
+	</select>
+
+	<select id="WebzineList" parameterType="Board" resultMap="BoardResult">
+		select
+		boardNo, boardCategory, title, content, viewgrade, ispublic,
+		hits,
+		memberid, fn_date(regdate) as regdate from (select rownum rn,
+		a.* from
+		(select * from board
+		where boardCategory = '웹진' order by boardNo desc)
+		a)
+	</select>
+
+	<select id="EventList" parameterType="Board" resultMap="BoardResult">
+		select
+		boardNo, boardCategory, title, content, viewgrade, ispublic,
+		hits,
+		memberid, fn_date(regdate) as regdate from (select rownum rn,
+		a.* from
+		(select * from board
+		where boardCategory = '이벤트' order by boardNo desc)
+		a)
+	</select>
+
+	<select id="BoardCategoryList" parameterType="String" resultMap="BoardResult">
+		select boardNo, boardCategory, title, content, viewgrade, ispublic,
+		hits, memberid, fn_date(regdate) as regdate from (select rownum rn,
+		a.* from (select * from board
+		where boardCategory = #{boardCategory}
+		order by boardNo desc) a)
+	</select>
+
+</mapper>

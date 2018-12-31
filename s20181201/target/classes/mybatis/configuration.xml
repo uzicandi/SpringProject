@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<typeAliases>
+		<typeAlias alias="Board" 		type="oracle.java.bmw.model.Board"/>
+		<typeAlias alias="Cart" 		type="oracle.java.bmw.model.Cart"/>
+		<typeAlias alias="Category" 	type="oracle.java.bmw.model.Category"/>
+		<typeAlias alias="Clip" 		type="oracle.java.bmw.model.Clip"/>
+		<typeAlias alias="Comments" 	type="oracle.java.bmw.model.Comments"/>
+		<typeAlias alias="Ingredient"	type="oracle.java.bmw.model.Ingredient"/>
+		<typeAlias alias="IngtList" 	type="oracle.java.bmw.model.IngtList"/>
+		<typeAlias alias="ItemInfo" 	type="oracle.java.bmw.model.ItemInfo"/>
+		<typeAlias alias="Member" 		type="oracle.java.bmw.model.Member"/>
+		<typeAlias alias="Point" 		type="oracle.java.bmw.model.Point"/>
+		<typeAlias alias="Ranking" 		type="oracle.java.bmw.model.Ranking"/>
+		<typeAlias alias="SaveFiles" 	type="oracle.java.bmw.model.SaveFiles"/>
+		<typeAlias alias="UtilityBMW" 	type="oracle.java.bmw.model.Utility"/>
+		<typeAlias alias="Shopping"		type="oracle.java.bmw.model.Shopping" />
+				
+	</typeAliases>
+	<mappers>
+		<mapper resource="mybatis/Board.xml"/>
+		<mapper resource="mybatis/Cart.xml"/>
+		<mapper resource="mybatis/Category.xml" />
+		<mapper resource="mybatis/Clip.xml" />
+		<mapper resource="mybatis/Comments.xml" />
+		<mapper resource="mybatis/Ingredient.xml" />
+		<mapper resource="mybatis/IngtList.xml" />
+		<mapper resource="mybatis/ItemInfo.xml" />
+		<mapper resource="mybatis/Member.xml"/>
+		<mapper resource="mybatis/Point.xml"/>
+		<mapper resource="mybatis/Ranking.xml" />		
+		<mapper resource="mybatis/SaveFiles.xml"/>	
+		<mapper resource="mybatis/Utility.xml"/>
+		<mapper resource="mybatis/Shopping.xml"/>
+	</mappers>
+</configuration>
+

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SaveFiles">
+	<resultMap id="SaveFilesResult"  type="SaveFiles">
+	    <result property="mainNo" column="mainNo"/>
+	    <result property="subNo" column="subNo"/>
+	    <result property="ref_Table" column="ref_Table"/>
+	    <result property="filesNo" column="filesNo"/>
+	    <result property="originFileName" column="originFileName"/>
+	    <result property="savedFileName" column="savedFileName"/>
+	    <result property="fileExtend" column="fileExtend"/>
+	    <result property="filePath" column="filePath"/>
+	    <result property="fileSize" column="fileSize"/>
+	    <result property="regDate" column="regDate"/>
+  	</resultMap>
+  	
+  	<!-- 동범 -->
+	<select id="BoardSaveFilesList" parameterType="SaveFiles" resultMap="SaveFilesResult">
+		select 	distinct(b.mainno), filesno, savedfilename, regdate
+		from    (select mainno, min(filesno) OVER(PARTITION BY mainno) minfile 
+        		from 	savefiles 
+        		where 	ref_table = '웹진') a, savefiles b
+		where   b.filesno = a.minfile and b.mainno = a.mainno and ref_table = '웹진' order by regdate desc
+  	</select>
+  	
+  	<select id="BoardSaveFilesEventList" parameterType="SaveFiles" resultMap="SaveFilesResult">
+		select * from savefiles where filesno = 1 and REF_TABLE = '이벤트' order by regdate desc
+  	</select>
+
+	<delete id="BoardSaveFilesRealDelete" parameterType="int">
+		delete from savefiles where mainno = #{boardNo} and (ref_table = '자유' or ref_table = '정보' or ref_table = 'QnA' or ref_table = '웹진' or ref_table = '이벤트')
+	</delete>
+	
+	<select id="BoardSaveFilesDeleteList" parameterType="int" resultMap="SaveFilesResult">
+		select * from savefiles where mainno = #{boardNo} and (ref_table = '자유' or ref_table = '정보' or ref_table = 'QnA' or ref_table = '웹진' or ref_table = '이벤트')
+	</select>
+
+	<!-- 재연 -->
+	<insert id="uploadFileInsertDB" parameterType="SaveFiles">
+		insert into saveFiles 
+		values (#{mainNo}, #{subNo}, #{ref_Table}, fn_MaxNoForTable('savefiles',#{ref_Table},#{mainNo},#{subNo}),#{originFileName},#{savedFileName},#{fileExtend},#{filePath},#{fileSize},fn_datetochar(sysdate))  
+	</insert>
+
+	<select id="uploadFileRead" parameterType="SaveFiles" resultType="SaveFiles">
+		select * from saveFiles where mainNo=#{mainNo} and subNo=#{subNo} and ref_Table=#{ref_Table}
+	</select>
+	
+	<delete id="uploadFileDelete" parameterType="SaveFiles" >
+		delete from saveFiles where mainNo=#{mainNo} and subNo=#{subNo} and ref_Table=#{ref_Table} and filesNo=#{filesNo}
+	</delete>
+	
+	<delete id="uploadFileDeleteAll" parameterType="SaveFiles" >
+		delete from saveFiles where mainNo=#{mainNo} and subNo=#{subNo} and ref_Table=#{ref_Table}
+	</delete>
+
+	<select id="uploadFileListAllwithItem" parameterType="SaveFiles" resultType="SaveFiles">
+		select * from saveFiles where mainNo=#{mainNo} and ref_Table=#{ref_Table}
+	</select>
+
+	<!-- 멤버용 -->
+	<update id="uploadFileUpdateDB">
+		update 	savefiles 
+		set 	originFileName=#{originFileName},
+		 		savedFileName=#{savedFileName}, 
+			 	fileExtend=#{fileExtend}, 
+		 		filePath=#{filePath}, 
+		 		fileSize=#{fileSize},
+				regdate=fn_datetochar(sysdate)
+		where	mainNo=#{mainNo}
+		and		ref_table='MEMBER'
+	</update>
+	<select id="memberPictureRead" parameterType="SaveFiles" resultType="SaveFiles">
+		select * from saveFiles where mainNo=#{mainNo} and subNo=0 and ref_Table='MEMBER'
+	</select>
+	<update id="memberPictureDelete" parameterType="int">
+		update	savefiles
+		set		filePath=0
+		where	mainno=#{mainNo}
+		and		ref_table='MEMBER'
+	</update>
+
+
+</mapper>

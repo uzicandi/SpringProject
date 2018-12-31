@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Comments">
+	
+	
+	<select id="JJYCommentsTotal" parameterType="Comments" resultType="int">
+	 	select count(*) from comments where mainno=#{mainNo} and ref_table=#{ref_Table}
+	</select>
+	 
+	<select id="JJYCommentList" parameterType="Comments" resultType="Comments">
+		<choose>
+			<when test="ref_Table == 'ITEMINFO'">
+		   		select mainno, subno, ref_table, ispublic, hits, ref, re_level, likeCnt, content, content2, content3, rating, memberid, htag, replyCnt, fn_date(regdate) as regDate 
+		   		from (select rownum rn, a.* from (select * from comments
+		  		where mainno=#{mainNo} and ref_table=#{ref_Table} order by subno desc) a) where rn between #{start} and #{end}
+	  		</when>
+  			<otherwise>
+	  			select mainno, subno, ref_table, ispublic, hits, ref, re_level, likeCnt, content, content2, content3, rating, memberid, htag, replyCnt, fn_date(regdate) as regDate  
+	  			from ( select * from comments where mainno=#{mainNo} and ref_Table=#{ref_Table} and ref=#{ref} order by subno desc ) comments 
+	  			where rownum between 1 and #{commPageNum}
+	  		</otherwise>
+  		</choose>
+	</select>
+	 
+	<insert id="JJYCommentWrite" parameterType="Comments">
+		<choose>
+			<when test="ref_Table == 'ITEMINFO'">
+			 	insert into comments (mainno, subno, ref_table, ispublic, hits, ref, re_level, content, content2, content3, rating, memberid, regdate)
+				values (#{mainNo},  fn_MaxNoForTable('comments',#{ref_Table},#{mainNo}), #{ref_Table}, #{isPublic}, #{hits}, #{mainNo}, #{re_Level}, #{content}, #{content2}, #{content3}, #{rating}, #{memberId}, fn_datetochar(sysdate))
+			</when>
+			<otherwise>
+	  			insert into comments (mainno, subno, ref_table, ispublic, hits, ref, re_level, content, rating, memberid, regdate)
+				values (#{mainNo},  fn_MaxNoForTable('comments',#{ref_Table},#{mainNo}), #{ref_Table}, #{isPublic}, #{hits}, #{ref}, #{re_Level}, #{content}, #{rating}, #{memberId}, fn_datetochar(sysdate))
+  			</otherwise>
+  		</choose>
+	</insert>
+	 
+	<select id="JJYCommentSelect" parameterType="Comments" resultType="Comments">
+		select mainno, subno, ref_table, ispublic, hits, ref, re_level, likeCnt, content, content2, content3, rating, memberid, htag, replyCnt, fn_date(regdate) as regDate 
+		from comments where mainNo=#{mainNo} and subNo=#{subNo} and ref_Table=#{ref_Table}
+	</select>
+	
+	<update id="JJYCommentUpdate" parameterType="Comments" >
+		<choose>
+			<when test="ref_Table == 'ITEMINFO'">
+				update comments set rating=#{rating}, content=#{content}, content2=#{content2}, content3=#{content3}
+				where mainNo=#{mainNo} and subNo=#{subNo} and ref_Table=#{ref_Table}
+			</when>
+			<otherwise>
+	  			update comments set content=#{content}, regDate=fn_datetochar(sysdate)
+				where mainNo=#{mainNo} and subNo=#{subNo} and ref_Table=#{ref_Table}
+  			</otherwise>
+  		</choose>  
+	</update>
+
+	<delete id="JJYCommentDelete" parameterType="Comments" >
+		delete from comments where mainNo=#{mainNo} and subNo=#{subNo} and ref_Table=#{ref_Table}
+	</delete>
+	
+	<delete id="JJYCommentDeleteAll" parameterType="Comments" >
+		delete from comments where mainNo=#{mainNo} and ref_Table=#{ref_Table} and ref=#{ref}
+	</delete>
+	
+	<delete id="JJYCommentDeleteAllWithItem" parameterType="Comments" >
+		delete from comments where ref_Table=#{ref_Table} and ref=#{ref}
+	</delete>
+	
+	<select id="JJYCommentCount" parameterType="Comments" resultType="long">
+		<choose>
+			<when test="ref_Table == 'BOARD'">
+				select count(*) as commentCount from comments where mainNO=#{mainNo} and ref_Table='BOARD'
+			</when>
+			<otherwise>
+				select count(*) as commentCount from comments where mainNO=#{subNo} and ref_Table=#{ref_Table}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<update id="reviewLikeCntUpdateAdd">
+		update comments set likeCnt=likeCnt+1 where mainNo=#{mainNo} and subNo=#{subNo} and ref_Table=#{ref_Table} and ref=#{ref}
+	</update>
+	
+	<update id="reviewLikeCntUpdateSub">
+		update comments set likeCnt=likeCnt-1 where mainNo=#{mainNo} and subNo=#{subNo} and ref_Table=#{ref_Table} and ref=#{ref}
+	</update>
+	
+	<update id="replyCntUpdate" parameterType="Comments">
+		update comments set replyCnt=replyCnt+1 where mainNo=#{ref} and subNo=#{mainNo} and ref_Table='ITEMINFO'
+	</update>
+	
+	<update id="replyCntUpdateSub" parameterType="Comments">
+		update comments set replyCnt=replyCnt-1 where mainNo=#{ref} and subNo=#{mainNo} and ref_Table='ITEMINFO'
+	</update>
+
+</mapper>

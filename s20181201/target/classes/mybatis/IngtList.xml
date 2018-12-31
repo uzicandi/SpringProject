@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="IngtList">
+	<resultMap id="IngtListResult" type="IngtList">
+		<result property="itemNo" column="itemNo" />
+		<result property="ingredientNo" column="ingredientNo" />
+	</resultMap>
+
+	<insert id="KISMappingInsert" parameterType="IngtList">
+		insert into ingtlist values (#{itemNo}, #{ingredientNo})
+	</insert>
+
+	<delete id="KISMappingDelete" parameterType="IngtList">
+		delete from ingtlist where itemNo=#{itemNo}
+	</delete>
+
+
+</mapper>

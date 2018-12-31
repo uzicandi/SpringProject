@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Member">
+	<!-- Use type aliases to avoid typing the full classname every time -->
+	<resultMap id="MemberResult"  type="Member">
+    <result property="memberId" column="memberId"/>
+    <result property="passwd" column="passwd"/>
+    <result property="nickname" column="nickname"/>
+    <result property="name" column="name"/>
+    <result property="birth" column="birth"/>
+    <result property="sex" column="sex"/>
+    <result property="skinType" column="skinType"/>
+    <result property="skinComplex" column="skinCompex"/>
+    <result property="grade" column="grade"/>
+    <result property="email" column="email"/>
+    <result property="isEmail" column="isEmail"/>
+    <result property="phone" column="phone"/>
+    <result property="address" column="address"/>
+    <result property="question" column="question"/>
+    <result property="answer" column="answer"/>
+    <result property="recommender" column="recommender"/>
+    <result property="joinDate" column="joinDate"/>
+    <result property="regDate" column="regDate"/>
+  </resultMap>
+  
+  	<!-- 원규 -->
+  	<!-- insert랑 update는 resultType 또는 resultMap이 없다 -->
+	<insert id="memberInsert" parameterType="Member">
+    	insert into member values(#{memberId}, #{passwd}, #{nickname}, #{name}, #{birth}, 
+    							#{sex}, #{skinType}, #{skinComplex}, 3, #{email}, #{isEmail}, #{phone}, 
+    							<if test="address == null">''</if><if test="address != null">#{address}</if>,
+    							#{question}, #{answer}, 
+    							<if test="recommender == null">''</if><if test="recommender != null">#{recommender}</if>, 
+    							fn_datetochar(sysdate), fn_datetochar(sysdate))
+	</insert>
+	
+	<insert id="memberFilesInsert" parameterType="Member">
+		insert into memberfiles values(member_seq.nextval, #{memberId})
+	</insert>
+	
+	<select id="memberFilesSel" parameterType="Member" resultType="int">
+		select seq from memberfiles where memberid=#{memberId}
+	</select>
+	
+	<insert id="memberPicInsert" parameterType="SaveFiles">
+		insert into savefiles values(#{seq}, 0, 'MEMBER', 1, 0, 0, 0, 0, 0, fn_DateToChar(sysdate))
+	</insert>
+	
+	<select id="idchk" parameterType="String" resultType="int">
+		select count(*) from member where memberid=#{memberId}
+	</select>
+	
+	<select id="nickchk" parameterType="String" resultType="int">
+		select count(*) from member where nickname=#{nickName}
+	</select>
+	
+	<update id="mailTestSuccess" parameterType="Member">
+		update member set grade=2 where memberid=#{memberId} and email=#{email}
+	</update>
+	
+	<select id="memberInfo" parameterType="Member" resultType="Member">
+		select * from member where memberid=#{memberId} and passwd=#{passwd}
+	</select>
+	<update id="memberWithdrawal" parameterType="String">
+		update member set grade=5 where memberid=#{memberId}
+	</update>
+	
+	
+	<!-- 동욱 -->
+	<!-- resultMap은 만든거 resultType은 dto -->
+	<select id="memberListByAdmin" resultType="Member"
+		parameterType="Member">
+		<if test="keyword==null">
+			select * from ( select rownum rn, a.*
+			from (select * from member order by memberid) a)
+			where rn between #{start}
+			and #{end}
+		</if>
+		<if test="keyword=='아이디'">
+			select * from ( select rownum rn , a.*
+			from (select *From member where memberId like '%'||#{search}||'%' order
+			by memberid asc) a)
+			Where rn Between #{start} and #{end}
+		</if>
+		<if test="keyword=='이름'">
+			select * from ( select rownum rn , a.*
+			from (select *From member where name like '%'||#{search}||'%' order by
+			memberid asc) a)
+			Where rn Between #{start} and #{end}
+		</if>
+		<if test="keyword=='주소'">
+			select * from ( select rownum rn , a.*
+			from (select *From member where address like '%'||#{search}||'%' order by
+			memberid asc) a)
+			Where rn Between #{start} and #{end}
+		</if>
+	</select>
+
+	<select id="totalByAdmin" parameterType="Member" resultType="int">
+		<if test="keyword == null">
+			SELECT count(*) FROM member
+		</if>
+		<if test="keyword == '아이디'">
+			SELECT count(*) FROM member where memberId like
+			'%'||#{search}||'%' order by name asc
+		</if>
+		<if test="keyword == '이름'">
+			SELECT count(*) FROM member where name like
+			'%'||#{search}||'%' order by name asc
+		</if>
+		<if test="keyword == '주소'">
+			SELECT count(*) FROM member where address like
+			'%'||#{search}||'%' order by name asc
+		</if>
+	</select>
+
+
+	<select id="detailByAdmin" parameterType="Member" resultType="Member">
+		select * from member where memberId = #{memberId}
+	</select>
+
+	<update id="updateByAdmin" parameterType="Member">
+		update member set
+		nickname = #{nickname},
+		name = #{name},
+		birth = #{birth},
+		sex = #{sex},
+		skinType = #{skinType},
+		skinComplex = #{skinComplex},
+		grade = #{grade},
+		email = #{email},
+		isEmail = #{isEmail},
+
+		<if test="phone!=null">
+			phone = #{phone},
+		</if>
+		<if test="address!=null">
+			address = #{address},
+		</if>
+		question = #{question},
+		answer = #{answer},
+		<if test="address!=null">
+			recommender = #{recommender}
+		</if>
+		where memberId = #{memberId}
+	</update>
+	
+	
+	<!-- 지우 -->
+	<select id="loginCheck" resultType="String"> 
+			SELECT nickname FROM member WHERE memberId = #{memberId} AND passwd = #{passwd}  	
+		</select>
+		
+		<select id="viewMember" resultType="Member"> 
+			SELECT nickname FROM member WHERE memberId = #{memberId} AND passwd = #{passwd}  	
+		</select>
+		
+		<select id="updateForm" resultType="Member"> 
+			SELECT memberId, passwd, name, address, phone, email FROM member WHERE memberId = #{memberId, jdbcType=VARCHAR}	
+		</select>
+		
+		<update id="updateMember">
+			UPDATE member 
+			SET 
+				passwd = #{passwd}, 
+				name = #{name}, 
+				address = #{address}, 
+				phone = #{phone}, 
+				email = #{email}
+			WHERE
+				memberId = #{memberId}	
+		</update>
+	
+	<select id="findIdCheck" parameterType="Member" resultType="String"> 
+			SELECT memberId FROM member WHERE email = #{email} AND question = #{question} AND answer = #{answer} 
+		</select>
+		
+		<update id="update_pw" parameterType="Member">
+			update member SET passwd = #{passwd} where memberId = #{memberId}
+		</update>
+		
+		<select id="findPwCheck" parameterType="Member" resultType="String"> 
+			SELECT * FROM member WHERE memberId = #{memberId} AND email = #{email} AND question = #{question} AND answer = #{answer}
+		</select>
+		
+		<select id="memberGetInfo" parameterType="Member" resultType="Member">
+			select * from member where memberId = #{memberId}
+		</select>
+	
+		<select id="mypageForm" resultType="Member"> 
+		<!-- 	SELECT memberId, passwd, name, address, phone, email FROM member WHERE memberId = #{memberId, jdbcType=VARCHAR}	 -->
+		SELECT * FROM member WHERE memberId = #{memberId, jdbcType=VARCHAR}
+		</select>
+
+		<select id="nickNameToMemberId" parameterType="String" resultMap="MemberResult">
+			select * from member where nickname=#{nickName}
+		</select>
+		
+
+</mapper>

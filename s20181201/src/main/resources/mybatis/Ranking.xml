@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Ranking">
+	<resultMap id="RankingResult" type="Ranking">
+		<result property="rankNo" column="rankNo" />
+		<result property="groupName" column="groupName" />
+		<result property="itemNo" column="itemNo" />
+	</resultMap>
+
+
+	<!-- 윤선 -->
+	<select id="RankingType" parameterType="Ranking" resultType="ItemInfo">
+		SELECT i.*, a.rankNo FROM itemInfo i,(SELECT * FROM ranking WHERE
+		groupName=#{groupName}
+		order by rankNo) a WHERE i.itemNo = a.itemNo
+	</select>
+
+	<select id="LikeRank" parameterType="Ranking" resultType="ItemInfo">
+		select
+		i.* from itemInfo i, ranking r where i.itemNo=r.itemNo order by
+		likeCnt
+	</select>
+
+	<!-- 동범 -->
+	<select id="SellRankList" resultType="ItemInfo">
+		<!-- select distinct(itemno), filepath, name, price, rating, rankno, savedfilename 
+			from savefiles, (SELECT i.*, a.rankNo FROM itemInfo i,(SELECT * FROM ranking 
+			WHERE groupName= '판매' order by rankNo) a WHERE i.itemNo = a.itemNo) b where 
+			savefiles.mainno = b.itemno and ref_table = 'ITEMINFO' order by rankno -->
+		select b.itemno, name, b.price, rating, rankno, filepath from
+		iteminfo,
+		(select rankno, ranking.itemno, price, filepath, groupname from ranking,
+		(select mainno itemno, min(price) price, min(filepath) filepath
+		from
+		savefiles, iteminfo
+		where mainno = itemno
+		and ref_table = 'ITEMINFO'
+		and
+		subno = 0
+		group by mainno
+		order by 1) a
+		where ranking.itemno = a.itemno
+        and groupname = '판매')
+		b
+		where iteminfo.itemno = b.itemno
+		order by rankno
+	</select>
+
+	<select id="HitsItemReviewRank" resultType="ItemInfo">
+		select mainno itemno, min(price) price, min(filepath) filepath, min(rating)
+		rating, min(hits) hits, min(name) name, min(brand) brand
+		from savefiles, iteminfo
+		where
+		mainno = itemno
+		and ref_table = 'ITEMINFO'
+		and subno = 0
+		group by mainno
+		order by hits desc
+	</select>
+
+</mapper>

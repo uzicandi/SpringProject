@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Shopping">
+	<resultMap id="ShoppingResult" type="Shopping">
+		<result property="orderNo" column="orderNo" />
+		<result property="memberId" column="memberId" />
+		<result property="itemNo" column="itemNo" />
+		<result property="amount" column="amount" />
+		<result property="receiver" column="receiver" />
+		<result property="recvTel" column="recvTel" />
+		<result property="address" column="address" />
+		<result property="status" column="status" />
+		<result property="memo" column="memo" />
+		<result property="regDate" column="regDate" />
+		<result property="name" column="name" />
+		<result property="price" column="price" />
+		<result property="filePath" column="filePath" />
+	</resultMap>
+
+	<!-- 동범 -->
+	<insert id="OrderInsert" parameterType="Shopping">
+		insert into Shopping
+		values(fn_MaxNoForTable('shopping'), #{memberId}, #{itemNo},
+		#{amount}, #{receiver}, #{recvTel}, #{address}, '0', #{memo},
+		fn_DateToChar(sysdate))
+	</insert>
+
+	<select id="OrderedList" parameterType="Shopping" resultMap="ShoppingResult">
+		<!-- select * from (select rownum rn, a.* from (select * from shopping 
+			order by regdate desc) a) where rn between #{start} and #{end} -->
+		<!-- select * from shopping where memberId = #{memberId} order by regDate 
+			desc -->
+		<!-- select * from shopping s, iteminfo i where i.itemno = s.itemno and 
+			s.memberid = #{memberId} order by s.regdate desc -->
+		<!-- select orderNo, s.memberId, s.itemNo, amount, receiver, recvTel, address, 
+			status, memo, fn_date(s.regDate) as regDate, name, price from shopping s, 
+			iteminfo i where i.itemno = s.itemno and s.memberid = #{memberId} order by 
+			s.regdate desc -->
+		<!-- select * from shopping sp, iteminfo ii, savefiles sf where sp.memberid 
+			= #{memberId} and sp.itemno = ii.itemno and sf.ref_table = 'ITEMINFO' and 
+			sp.itemno = sf.mainno order by sp.regdate desc -->
+		select sp.orderno, sp.memberid, sp.itemno, sp.receiver, sp.recvtel,
+		sp.address, sp.status, FN_DATE(sp.regdate) regdate, price, filepath, name, memo, amount
+		from shopping sp,
+		(select distinct(itemno), price, filepath, name
+		from savefiles, iteminfo
+		where mainno = itemno
+		and ref_table = 'ITEMINFO'
+		and subno = 0
+		order by 1) a
+		where sp.memberid = #{memberId}
+		and sp.itemno = a.itemno
+		order by sp.regdate desc
+	</select>
+
+	<select id="PaymentCompleteCount" parameterType="Shopping"
+		resultType="int">
+		select count(*) from shopping where memberId = #{memberId}
+		and status = '0'
+	</select>
+
+	<select id="DeliveryCompleCount" parameterType="Shopping"
+		resultType="int">
+		select count(*) from shopping where memberId = #{memberId}
+		and (status = '1' or status = '2')
+	</select>
+
+</mapper>

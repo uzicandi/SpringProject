@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ItemInfo">
+	<resultMap id="KISItemResult" type="ItemInfo">
+		<result property="itemNo" column="itemNo" />
+		<result property="categoryNo" column="categoryNo" />
+		<result property="brand" column="brand" />
+		<result property="name" column="name" />
+		<result property="itemStock" column="itemStock" />
+		<result property="info" column="info" />
+		<result property="price" column="price" />
+		<result property="rating" column="rating" />
+		<result property="hits" column="hits" />
+		<result property="memberId" column="memberId" />
+		<result property="isPublic" column="isPublic" />
+		<result property="likeCnt" column="likeCnt" />
+		<result property="htag" column="htag" />
+		<result property="regDate" column="regDate" />
+
+		<result property="search" column="search" />
+		<result property="keyword" column="keyword" />
+		<result property="pageNum" column="pageNum" />
+		<result property="start" column="start" />
+		<result property="end" column="end" />
+
+		<!-- <result property="cateNum" column="cateNum"/> -->
+		<!-- <result property="cateName" column="cateName"/> -->
+	</resultMap>
+
+	<resultMap id="KISIngtListResult" type="IngtList">
+		<result property="itemNo" column="itemNo" />
+		<result property="ingredientNo" column="ingredientNo" />
+	</resultMap>
+
+	<resultMap id="KISIngtResult" type="Ingredient">
+		<result property="ingredientNo" column="ingredientNo" />
+		<result property="name" column="name" />
+		<result property="grade" column="grade" />
+		<result property="danger20" column="danger20" />
+		<result property="dangerAllergy" column="dangerAllergy" />
+		<result property="functional" column="functional" />
+	</resultMap>
+
+	<select id="KISIngtName" parameterType="int" resultType="Ingredient">
+		select *
+		from ingredient ingt, ingtlist mapping where ingt.ingredientNo =
+		mapping.ingredientNo and itemNo=#{itemNo}
+	</select>
+
+	<!-- 키워드 없을 때 -->
+	<select id="KISItemList" parameterType="ItemInfo" resultMap="KISItemResult">
+		select * from (select rownum rn, a.* from (select * from iteminfo
+		<if test="cateNum != 0">
+			where categoryNo=#{cateNum}
+		</if>
+		order by itemNo) a) where rn between #{start} and #{end}
+	</select>
+
+	<select id="KISItemTotal" parameterType="ItemInfo" resultType="int">
+		select count(*) from iteminfo 
+		<if test="cateNum != 0">
+			where categoryNo=#{cateNum}
+		</if>
+	</select>
+	<!-- 키워드 있을 때 -->
+	<select id="KISItemSearchList" parameterType="ItemInfo" resultMap="KISItemResult">
+		select * from(select rownum rn, a.* from(select * from iteminfo
+		<if test="search == null">
+
+		</if>
+		<if test="search =='브랜드'">
+			where brand like '%' || #{keyword} || '%'
+		</if>
+		<if test="search =='제품명'">
+			where name like '%' || #{keyword} || '%'
+		</if>
+		<if test="search =='해시태그'">
+			where htag like '%' || #{keyword} || '%'
+		</if>
+		<if test="cateNum != 0">
+			and categoryNo=#{cateNum}
+		</if>
+		)a) where rn between #{start} and #{end}
+	</select>
+
+	<select id="KISItemSearchTotal" parameterType="ItemInfo" resultType="int">
+		select count(*) from iteminfo 
+		<if test="cateNum == 0">
+			<if test="search == null">
+			</if>
+			<if test="search == '브랜드'">
+				where brand like '%' || #{keyword} || '%'
+			</if>
+			<if test="search == '제품명'">
+				where name like '%' || #{keyword} || '%'
+			</if>
+			<if test="search == '해시태그'">
+				where htag like '%' || #{keyword} || '%'
+			</if>
+		</if>
+		<if test="cateNum != 0">
+			where
+			<if test="search == null">
+			</if>
+			<if test="search == '브랜드'">
+				brand like '%' || #{keyword} || '%' and
+			</if>
+			<if test="search == '제품명'">
+				name like '%' || #{keyword} || '%' and
+			</if>
+			<if test="search == '해시태그'">
+				htag like '%' || #{keyword} || '%' and
+			</if>
+			categoryNo=#{cateNum}
+		</if>
+	</select>
+
+	<select id="itemBestList" parameterType="ItemInfo" resultMap="KISItemResult">
+		select * from iteminfo order by rating desc, likeCnt desc
+	</select>
+
+	<select id="KISItemContent" parameterType="int" resultType="ItemInfo">
+		select * from iteminfo where itemNo = #{itemNo}
+	</select>
+
+	<select id="KISItemNoSelect" resultType="int">
+		select
+		fn_MaxNoForTable('ItemInfo') itemNo from dual
+	</select>
+
+
+	<insert id="KISItemWrite" parameterType="ItemInfo">
+		<selectKey resultType="int" keyProperty="itemNo" order="BEFORE"
+			statementType="PREPARED">
+			select fn_MaxNoForTable('ItemInfo') from dual
+		</selectKey>
+		insert into iteminfo (itemNo, categoryNo, brand, name, itemStock,
+		info, price, rating, hits, memberId, isPublic, likeCnt, htag, regDate)
+		values (#{itemNo}, #{categoryNo}, #{brand}, #{name}, #{itemStock},
+		#{info}, #{price}, #{rating}, #{hits}, #{memberId}, #{isPublic},
+		#{likeCnt}, #{htag}, fn_DateToChar(sysdate))
+	</insert>
+
+
+	<delete id="KISItemDelete" parameterType="int">
+		delete from iteminfo
+		where itemNo=#{itemNo}
+	</delete>
+
+	<update id="KISItemHits" parameterType="int">
+		update iteminfo set hits
+		= hits+1 where itemNo=#{itemNo}
+	</update>
+
+	<update id="KISItemUpdate" parameterType="ItemInfo">
+		update iteminfo set
+		categoryNo=#{categoryNo}, brand=#{brand}, name=#{name},
+		itemStock=#{itemStock}, info=#{info}, price=#{price},
+		isPublic=#{isPublic}, htag=#{htag} where itemNo=#{itemNo}
+	</update>
+
+
+	<!-- 재연 -->
+	<update id="ratingUpdate" parameterType="Comments">
+		update iteminfo set rating=
+		(select avg(rating) as rating from comments where mainNo=#{mainNo} and ref_Table=#{ref_Table})
+ 		where itemNo=#{mainNo}
+	</update>
+	
+	<update id="lickCntUpdateAdd" parameterType="int">
+		update iteminfo set likeCnt=likeCnt+1 where itemNo=#{itemNo}
+	</update>
+	
+	<update id="lickCntUpdateSub" parameterType="int">
+		update iteminfo set likeCnt=likeCnt-1 where itemNo=#{itemNo}
+	</update>
+	
+	<select id="getLikeCnt" parameterType="int" resultType="int">
+		select likeCnt from iteminfo where itemNo=#{itemNo}
+	</select>
+
+
+
+</mapper>

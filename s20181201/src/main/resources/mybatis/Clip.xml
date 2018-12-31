@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Clip">
+	<resultMap id="ClipResult" type="Clip">
+		<result property="memberId" column="memberId" />
+		<result property="mainNo" column="mainNo" />
+		<result property="subNo" column="subNo" />
+		<result property="title" column="title" />
+		<result property="ref_Table" column="ref_Table" />
+		<result property="regDate" column="regDate" />
+		<result property="name" column="name" />
+	</resultMap>
+
+	<resultMap id="ItemInfo" type="ItemInfo">
+		<result property="name" column="name" />
+	</resultMap>
+
+	<select id="reviewClipTotal" parameterType="String" resultType="int">
+		select count(*) from clip where memberid=#{memberId} and subno!=0 and
+		ref_table='ITEMINFO'
+	</select>
+
+	<select id="reviewClipList" parameterType="Clip" resultMap="ClipResult">
+		select 	name, mainNo, subNo, title, ref_Table, fn_date(regDate) regDate
+		from 	(select rownum rn, a.*, b.* from (select * from clip where
+		memberid=#{memberId} and subno!=0 and ref_table='ITEMINFO') a, (select
+		itemno, name from iteminfo) b where a.mainno=b.itemno order by regdate
+		desc) where rn between #{start} and #{end}
+	</select>
+
+	<delete id="reviewClipDelete" parameterType="Clip">
+		delete from clip where memberid=#{memberId} and mainno=#{mainNo} and
+		subno=#{subNo} and ref_table='ITEMINFO'
+	</delete>
+
+	<select id="boardClipTotal" parameterType="String" resultType="int">
+		select count(*) from clip where memberid=#{memberId} and subno=0 and
+		ref_table='BOARD'
+	</select>
+
+	<select id="boardClipList" parameterType="Clip" resultType="Clip">
+		select * from (select rownum rn, a.boardno mainNo, a.title title,
+		a.memberid memberId, fn_date(b.regdate) regDate from board a, (select
+		mainno, regdate from clip where memberid=#{memberId} and subno=0 and
+		ref_table='BOARD') b where a.boardno=b.mainno order by 5 desc) where
+		rn between #{start} and #{end}
+	</select>
+
+	<delete id="boardClipDelete" parameterType="Clip">
+		delete from clip where memberid=#{memberId} and mainno=#{mainNo} and subno=0
+		and ref_table='BOARD'
+	</delete>
+
+	<insert id="BoardContentClipInsert" parameterType="Board">
+		insert into
+		clip values(#{memberId}, #{boardNo}, 0, #{title},
+		fn_datetochar(sysdate), 'BOARD')
+	</insert>
+
+	<select id="BoardContentClipChk" parameterType="Board"
+		resultType="int">
+		select mainno from clip where memberId = #{memberId} and
+		mainno = #{boardNo} and ref_table = 'BOARD'
+	</select>
+
+	<delete id="boardContentClipDelete" parameterType="int">
+		delete from
+		clip where mainno=#{boardNo} and subNo=0 and ref_table='BOARD'
+	</delete>
+
+	<insert id="reviewContentClipInsert" parameterType="Comments">
+		insert into
+		clip values(#{memberId}, #{mainNo}, #{subNo}, #{content},
+		fn_datetochar(sysdate), 'ITEMINFO')
+	</insert>
+
+	<select id="reviewContentClipChk" parameterType="Comments"
+		resultType="int">
+		select mainno, subno from clip where memberId=#{memberId}
+		and mainno=#{mainNo} and subno=#{subNo} and ref_table = 'ITEMINFO'
+	</select>
+
+	<delete id="reviewContentClipDelete" parameterType="Comments">
+		delete from
+		clip where mainno=#{mainNo} and subNo=#{subNo} and
+		ref_table='ITEMINFO'
+	</delete>
+
+	<!-- 재연 -->
+	<select id="likeCheck" parameterType="Clip" resultType="Clip">
+		select * from clip where memberId=#{memberId} and mainNo=#{mainNo}
+	</select>
+
+	<insert id="insertClip">
+		insert into clip (memberId, mainNo, subNo, ref_Table) values (#{memberId},
+		#{mainNo}, #{subNo}, #{ref_Table})
+	</insert>
+
+	<delete id="deleteClip">
+		delete from clip where memberId=#{memberId} and mainNo=#{mainNo} and
+		subNo=#{subNo} and ref_Table=#{ref_Table}
+	</delete>
+
+</mapper>
